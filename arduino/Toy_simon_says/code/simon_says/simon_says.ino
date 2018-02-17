@@ -301,7 +301,7 @@ int Game::userInput() {
 Game g(50); //  Constructs the game object.
 void setup() {
   Serial.begin(9600);
-  randomSeed(0);
+  randomSeed(analogRead(0));
 }
 
 void loop() {
