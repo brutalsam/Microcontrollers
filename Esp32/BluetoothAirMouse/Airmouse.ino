@@ -9,7 +9,7 @@
 
 const float XDEG_MULTIPLIER = 28;
 const float YDEG_MULTIPLIER = 18;
-const float SENSITIVITY_THRESHOLD = 0.2;
+const float SENSITIVITY_THRESHOLD = 0.19;
 #define LEFT_BUTTON_PIN 13
 #define BACK_BUTTON_PIN 12
 
@@ -99,7 +99,7 @@ void loop()
   }
 }
 
-void processButtons(BleMouse bleMouse)
+void processButtons(BleMouse &bleMouse)
 {
   leftCurrentState = digitalRead(LEFT_BUTTON_PIN);
   if (leftLastState == HIGH && leftCurrentState == LOW)
