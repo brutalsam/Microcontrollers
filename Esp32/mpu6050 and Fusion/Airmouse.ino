@@ -7,8 +7,11 @@
 #include <Adafruit_AHRS.h>
 #include <math.h>
 #include <BleMouse.h>
-const float DEG_MULTIPLIER = 14;
+const float XDEG_MULTIPLIER = 28;
+const float YDEG_MULTIPLIER = 18;
 const float SENSITIVITY_THRESHOLD = 0.2;
+#define LEFT_BUTTON_PIN 13 // GIOP13 pin connected to button
+#define BACK_BUTTON_PIN 12 // GIOP13 pin connected to button
 BleMouse bleMouse;
 
 Adafruit_MPU6050 mpu;
@@ -18,6 +21,12 @@ Adafruit_Sensor_Calibration_EEPROM cal;
 float previousXValue;
 float previousYValue;
 
+// Variables will change:
+int leftLastState = HIGH; // the previous state from the input pin
+int leftCurrentState;     // the current reading from the input pin
+
+int backLastState = HIGH; // the previous state from the input pin
+int backCurrentState;     // the current reading from the input pin
 
 void setup(void) {
   Serial.begin(115200);
@@ -27,11 +36,15 @@ void setup(void) {
   cal.begin();
   cal.loadCalibration();
   bleMouse.begin();
+  bleMouse.setBatteryLevel(15);
   Wire.setClock(400000); 
+  pinMode(LEFT_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BACK_BUTTON_PIN, INPUT_PULLUP);
   delay(100);
 }
 
 void loop() {
+ 
   if(bleMouse.isConnected()) {
     if ((millis() - timestamp) < (15)) {
       return;
@@ -62,41 +75,49 @@ void loop() {
       xMoveValue = 0;
     }
 
-    float yMoveValue = previousYValue - roll;
+    float yMoveValue = previousYValue - pitch;
     if (previousYValue != 0 && abs(yMoveValue) <= SENSITIVITY_THRESHOLD) {
       yMoveValue = 0;
     }
 
     previousXValue = yaw;
-    previousYValue = roll;
-
-    // Serial.print("Orientation: ");
-    // Serial.print(previousXValue);
-    // Serial.print(", ");
-    // Serial.print(yaw);
-    // Serial.print(", ");
-    // Serial.print(previousYValue);
-    // Serial.print(", ");
-    // Serial.print(roll);
+    previousYValue = pitch;
 
 
-    // if (yMoveValue != 0 || xMoveValue !=0) {
-    //   // Move shit
-    //   Serial.print("Mouse move: ");
-    //   Serial.print(xMoveValue);
-    //   Serial.print(", ");
-    //   Serial.println(yMoveValue);
+    // ToDO move buttons to a class/method
+    leftCurrentState = digitalRead(LEFT_BUTTON_PIN);
+    if (leftLastState == HIGH && leftCurrentState == LOW){
+      Serial.println("The button is pressed");
+      bleMouse.press(MOUSE_MIDDLE);
+      
+    }
+    else if (leftLastState == LOW && leftCurrentState == HIGH){
+      Serial.println("The button is released");
+      bleMouse.release(MOUSE_MIDDLE); 
+    }
+    // save the last state
+    leftLastState = leftCurrentState;
 
-    //   bleMouse.move(round(xMoveValue * DEG_MULTIPLIER), -round(yMoveValue * DEG_MULTIPLIER));
-    // }
-    
-    Serial.print("Orientation: ");
-    Serial.print(pitch);
-    Serial.print(", ");
-    Serial.print(yaw);
-    Serial.print(", ");
-    Serial.print(roll);
-    Serial.print(", ");
-    Serial.println(beta);
+    backCurrentState = digitalRead(BACK_BUTTON_PIN);
+    if (backLastState == HIGH && backCurrentState == LOW){
+      Serial.println("The button is pressed");
+      bleMouse.press(MOUSE_BACK);
+      
+    }
+    else if (backLastState == LOW && backCurrentState == HIGH){
+      Serial.println("The button is released");
+      bleMouse.release(MOUSE_BACK); 
+    }
+    // save the last state
+    backLastState = backCurrentState;
+
+    if (yMoveValue != 0 || xMoveValue !=0) {
+      // Move shit
+      Serial.print("Mouse move: ");
+      Serial.print(xMoveValue);
+      Serial.print(", ");
+      Serial.println(yMoveValue);
+      bleMouse.move(round(xMoveValue * XDEG_MULTIPLIER), -round(yMoveValue * YDEG_MULTIPLIER));
+    }
   }
 }
