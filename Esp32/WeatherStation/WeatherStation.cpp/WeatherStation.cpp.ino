@@ -8,8 +8,8 @@
 #define uS_TO_S_FACTOR 1000000ULL   // Conversion factor from microseconds to seconds
 #define TIME_TO_SLEEP  580           // Time for ESP32-E to enter deep sleep
 // #define TIME_TO_SLEEP  15
-const char* ssid = "NETGEAR98";
-const char* password = "perfectmesa973";
+const char* ssid = "...";
+const char* password = "...";
 const char* mqtt_server = "192.168.0.16";
 
 WiFiClient espClient;
