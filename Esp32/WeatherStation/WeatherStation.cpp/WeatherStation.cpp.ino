@@ -6,7 +6,7 @@
 #include <esp_wifi.h>
 
 #define uS_TO_S_FACTOR 1000000ULL   // Conversion factor from microseconds to seconds
-#define TIME_TO_SLEEP  580           // Time for ESP32-E to enter deep sleep
+#define TIME_TO_SLEEP  599           // Time for ESP32-E to enter deep sleep
 // #define TIME_TO_SLEEP  15
 const char* ssid = "...";
 const char* password = "...";
@@ -81,20 +81,28 @@ void setup_wifi() {
     Serial.print(".");
     attempts++;
   }
+  if (WiFi.status() != WL_CONNECTED && attempts >= 25) {
+    esp_restart();
+  }
+
 }
 
 void reconnect() {
-  while (!client.connected()) {
+  int attempts = 0;
+  while (!client.connected() && attempts < 15) {
     Serial.print("Attempting MQTT connection...");
-    if (client.connect("ESP8266Client")) {
+    if (client.connect("ESP32_Client")) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
       delay(5000);
     }
+  }
+
+  if (!client.connected() && attempts >= 15) {
+    esp_restart();
   }
 }
 
@@ -112,7 +120,9 @@ void sendMessage() {
   Serial.print("message: ");
   Serial.println(message);
   client.loop();
-  delay(500);
+  delay(400);
+  client.disconnect();
+  delay(100);
 }
 void loop() {
 }
