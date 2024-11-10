@@ -7,7 +7,6 @@
 
 #define uS_TO_S_FACTOR 1000000ULL   // Conversion factor from microseconds to seconds
 #define TIME_TO_SLEEP  599           // Time for ESP32-E to enter deep sleep
-// #define TIME_TO_SLEEP  15
 const char* ssid = "...";
 const char* password = "...";
 const char* mqtt_server = "192.168.0.16";
@@ -48,7 +47,7 @@ void setup() {
   
   Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
   Serial.println("Going to sleep now");  // We have set the wake up reason. Now we can start go to sleep of the peripherals need to be in deep sleep. If no wake-up source is provided, but deep sleep is initiated, it will sleep forever unless a hardware reset occurs.
-  Serial.flush(); 
+  Serial.flush();
   esp_deep_sleep_start();   
 }
 
@@ -106,6 +105,13 @@ void reconnect() {
   }
 }
 
+float GetBatteryVoltage(){
+    float potValue;
+    pinMode(A1,INPUT_PULLUP);
+    potValue = ((float)analogRead(A1) / 4095) * 3.3 * 2 * 1.097;
+    return potValue;
+}
+
 void sendMessage() {
   if (!client.connected()) {
     reconnect();
@@ -115,7 +121,9 @@ void sendMessage() {
   String pressureStr = String(bme.readPressure() / 100.0F, 2);
   String tempStr = String(bme.readTemperature(), 2);
   String humidityStr = String(bme.readHumidity(), 2);
-  String message = tempStr + "/" + humidityStr + "/" + pressureStr;
+  String batV = String(GetBatteryVoltage(), 2);
+  String message = tempStr + "/" + humidityStr + "/" + pressureStr + "/" + batV;
+
   client.publish("esp32/weather", message.c_str());
   Serial.print("message: ");
   Serial.println(message);
